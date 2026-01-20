@@ -114,7 +114,7 @@ namespace EpubManager.ContentSources
 
 	public class Literotica : IStoryWriter
 	{
-		private static readonly LiteroticaUrlUtil UrlUtil = new ();
+		public static readonly LiteroticaUrlUtil UrlUtil = new ();
 
 		public void Log(string message)
 		{
