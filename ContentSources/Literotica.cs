@@ -12,6 +12,10 @@ using LiteroticaApi.DataObjects;
 
 namespace EpubManager.ContentSources
 {
+
+	/// <summary>
+	/// Adds base util to Literotica story writer.
+	/// </summary>
 	public class LiteroticaUrlUtil : IStoryWriterUtil
 	{
 		internal record Data(
@@ -37,6 +41,21 @@ namespace EpubManager.ContentSources
 			[property: JsonPropertyName("data")] Data Data
 		);
 
+		/// <summary>
+		/// Extracts the story slug from a Literotica story URL.
+		/// </summary>
+		/// <param name="url">The full URL of the story (e.g., <c>https://www.literotica.com/s/example-story</c>).</param>
+		/// <returns>The story slug extracted from the URL (e.g., <c>example-story</c>).</returns>
+		/// <exception cref="Exception">Thrown when the URL does not contain a valid or verifiable story slug.</exception>
+		/// <remarks>
+		/// This method supports multiple URL formats:
+		/// <list type="bullet">
+		///   <item><description><c>/s/{slug}</c></description></item>
+		///   <item><description><c>/story/{slug}</c></description></item>
+		///   <item><description><c>/stories/{slug}</c></description></item>
+		/// </list>
+		/// The slug is validated using <see cref="VerifySlugAsync(string)"/>.
+		/// </remarks>
 		public async Task<string> GetStorySlugAsync(string url)
 		{
 			string foundSlug = url;
@@ -68,6 +87,15 @@ namespace EpubManager.ContentSources
 			return foundSlug;
 		}
 
+		/// <summary>
+		/// Extracts the numeric series ID from a Literotica series URL.
+		/// </summary>
+		/// <param name="url">The full URL of the series (e.g., <c>https://www.literotica.com/se/12345</c>).</param>
+		/// <returns>The series ID extracted from the URL.</returns>
+		/// <exception cref="Exception">Thrown when the URL does not contain a valid or verifiable series ID.</exception>
+		/// <remarks>
+		/// The series ID is validated using <see cref="VerifySeriesIdAsync(string)"/>.
+		/// </remarks>
 		public async Task<string> GetSeriesIdAsync(string url)
 		{
 			string foundSlug = url;
@@ -99,12 +127,25 @@ namespace EpubManager.ContentSources
 			return foundSlug;
 		}
 
+		/// <summary>
+		/// Verifies if a given series ID exists on Literotica.
+		/// </summary>
+		/// <param name="seriesId"></param>
+		/// <returns></returns>
 		public async Task<bool> VerifySeriesIdAsync(string? seriesId)
 		{
 			HttpResponseMessage? responseMessage = await Client.HttpClientInstance.SendAsync(new HttpRequestMessage(HttpMethod.Head, $"https://literotica.com/api/3/series/{seriesId}"));
 			return responseMessage.IsSuccessStatusCode;
 		}
 
+		/// <summary>
+		/// Checks whether a story slug exists on Literotica by sending a HEAD request to the API.
+		/// </summary>
+		/// <remarks>This method performs a network request to Literotica's API. The operation may fail or return
+		/// false if the slug is invalid, does not exist, or if there are network issues.</remarks>
+		/// <param name="slug">The slug identifier of the story to verify. Can be null or empty; if so, the method will return false.</param>
+		/// <returns>A task that represents the asynchronous operation. The task result is <see langword="true"/> if the slug exists;
+		/// otherwise, <see langword="false"/>.</returns>
 		public async Task<bool> VerifySlugAsync(string? slug)
 		{
 			HttpResponseMessage? responseMessage = await Client.HttpClientInstance.SendAsync(new HttpRequestMessage(HttpMethod.Head, $"https://literotica.com/api/3/stories/{slug}"));
