@@ -44,19 +44,75 @@ namespace EpubManager.ContentSources
 		public object Identifier { get; set; } = Guid.NewGuid();
 	}
 
+	/// <summary>
+	/// Defines methods for logging messages and generating EPUB files from online story or series sources.
+	/// </summary>
+	/// <remarks>Implementations of this interface provide functionality to create EPUB files from specified story
+	/// or series URLs, with options for customizing output and logging progress or errors. Methods are asynchronous and
+	/// may perform network and file system operations.</remarks>
 	public interface IStoryWriter
 	{
+		/// <summary>
+		/// Writes the specified message to the log output.
+		/// </summary>
+		/// <param name="message">The message to be logged. Cannot be null.</param>
 		public void Log(string message);
 		
+		/// <summary>
+		/// Asynchronously creates an EPUB file from the specified series URL and saves it to the given output directory.
+		/// </summary>
+		/// <param name="seriesUrl">The URL of the series to download and convert to EPUB. Must be a valid, accessible series URL.</param>
+		/// <param name="outputDirectory">The directory where the generated EPUB file will be saved. Must be a valid path with write permissions.</param>
+		/// <param name="coverOverwrite">The file path to a custom cover image to use for the EPUB. If empty, the default series cover is used.</param>
+		/// <param name="raw">If <see langword="true"/>, downloads the raw, unprocessed content; otherwise, applies formatting and processing.</param>
+		/// <param name="startIndex">The zero-based index of the first chapter to include. Must be greater than or equal to zero.</param>
+		/// <param name="endIndex">The zero-based index of the last chapter to include. If zero, all chapters from <paramref name="startIndex"/>
+		/// onward are included.</param>
+		/// <returns>A task that represents the asynchronous operation of creating the EPUB file.</returns>
 		public Task CreateEpubFromSeriesAsync(string seriesUrl, string outputDirectory, string coverOverwrite = "", bool raw = false, int startIndex = 0, int endIndex = 0);
 
+		/// <summary>
+		/// Asynchronously creates an EPUB file from the specified story URL and saves it to the given output directory.
+		/// </summary>
+		/// <param name="storyUrl">The URL of the story to download and convert to EPUB format. Must be a valid, accessible URL.</param>
+		/// <param name="outputDirectory">The directory where the generated EPUB file will be saved. Must exist and be writable.</param>
+		/// <param name="coverOverwrite">The file path to a custom cover image to use for the EPUB. If empty, the default cover is used.</param>
+		/// <param name="raw">Specifies whether to use the raw, unprocessed version of the story. If <see langword="true"/>, the EPUB will
+		/// contain the original content without formatting; otherwise, formatting is applied.</param>
+		/// <returns>A task that represents the asynchronous operation of creating the EPUB file.</returns>
 		public Task CreateEpubFromStoryAsync(string storyUrl, string outputDirectory, string coverOverwrite = "", bool raw = false);
 	}
 
+	/// <summary>
+	/// Provides static methods and constants for generating EPUB files from story data.
+	/// </summary>
+	/// <remarks>The StoryWriter class is intended for use in scenarios where stories, including chapters and cover
+	/// art, need to be packaged into a valid EPUB format. All members are static and thread safety is not guaranteed;
+	/// concurrent calls should be managed externally if required.</remarks>
 	public static class StoryWriter
 	{
+		/// <summary>
+		/// Represents the full path to the application's temporary directory.
+		/// </summary>
+		/// <remarks>The directory is located under the application's base directory and is named "temp". This path
+		/// can be used for storing temporary files specific to the application's runtime environment.</remarks>
 		public static readonly string TempDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "temp");
 
+		/// <summary>
+		/// Creates an EPUB file from the specified story, including chapters, metadata, and optional cover art.
+		/// </summary>
+		/// <remarks>The method writes temporary files to a working directory and may download or copy cover art if
+		/// specified. If the raw parameter is set to <see langword="true"/>, the final .epub archive is not created, and the
+		/// working directory is retained for inspection. The method may overwrite existing files in the output directory.
+		/// Logging via the onLog callback can provide detailed progress and error information.</remarks>
+		/// <param name="story">The story to be converted into an EPUB file. Must contain chapter information and metadata such as title and,
+		/// optionally, cover art.</param>
+		/// <param name="onLog">An optional callback that receives log messages during the EPUB creation process. Can be used to monitor progress
+		/// or capture errors.</param>
+		/// <param name="outputDirectory">The directory in which to place the generated EPUB file and temporary working files. If null or empty, the
+		/// application's base directory is used.</param>
+		/// <param name="raw">If <see langword="true"/>, the method generates the EPUB file structure without packaging it into a final .epub
+		/// archive. If <see langword="false"/>, the method creates the .epub archive and cleans up temporary files.</param>
 		public static void CreateEpub(EpubStory story, Action<string>? onLog = null, string? outputDirectory = null, bool raw = false)
 		{
 			string baseDirectory = string.IsNullOrEmpty(outputDirectory)

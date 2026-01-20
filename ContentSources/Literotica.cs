@@ -128,10 +128,15 @@ namespace EpubManager.ContentSources
 		}
 
 		/// <summary>
-		/// Verifies if a given series ID exists on Literotica.
+		/// Asynchronously verifies whether the specified series ID exists on Literotica by sending a HEAD request to the API.
 		/// </summary>
-		/// <param name="seriesId"></param>
-		/// <returns></returns>
+		/// <remarks>This method does not throw an exception for non-existent series IDs; it returns <see
+		/// langword="false"/> if the series is not found or if the request fails. Network errors or invalid IDs may also
+		/// result in a <see langword="false"/> return value.</remarks>
+		/// <param name="seriesId">The unique identifier of the series to verify. Can be null or empty, but such values will result in a failed
+		/// verification.</param>
+		/// <returns>A task that represents the asynchronous operation. The task result is <see langword="true"/> if the series ID
+		/// exists; otherwise, <see langword="false"/>.</returns>
 		public async Task<bool> VerifySeriesIdAsync(string? seriesId)
 		{
 			HttpResponseMessage? responseMessage = await Client.HttpClientInstance.SendAsync(new HttpRequestMessage(HttpMethod.Head, $"https://literotica.com/api/3/series/{seriesId}"));
@@ -153,10 +158,28 @@ namespace EpubManager.ContentSources
 		}
 	}
 
+	/// <summary>
+	/// Provides functionality for downloading and converting stories or series from Literotica into EPUB format.
+	/// </summary>
+	/// <remarks>Use the Literotica class to generate EPUB files from either individual stories or entire series
+	/// hosted on Literotica. The class offers asynchronous methods for both scenarios, allowing you to specify output
+	/// directories, custom cover images, and formatting options. This class is intended for use in applications that
+	/// automate the retrieval and conversion of Literotica content for offline reading. All methods require valid
+	/// Literotica URLs and may throw exceptions if the content cannot be found or retrieved.</remarks>
 	public class Literotica : IStoryWriter
 	{
+		/// <summary>
+		/// Provides a shared instance of the LiteroticaUrlUtil class for working with Literotica URLs.
+		/// </summary>
+		/// <remarks>This static field can be used to access URL utility methods without creating a new
+		/// LiteroticaUrlUtil instance. The instance is thread-safe for concurrent use if LiteroticaUrlUtil itself is
+		/// thread-safe.</remarks>
 		public static readonly LiteroticaUrlUtil UrlUtil = new ();
 
+		/// <summary>
+		/// Writes the specified message to both the standard output and the debug output streams.
+		/// </summary>
+		/// <param name="message">The message to be logged. If <paramref name="message"/> is null, no output is written.</param>
 		public void Log(string message)
 		{
 			Console.WriteLine(message);
