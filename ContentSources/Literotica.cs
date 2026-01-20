@@ -260,7 +260,7 @@ namespace EpubManager.ContentSources
 			Dictionary<string, string> chapterFiles = [];
 			string[] files = Directory.GetFiles(storyLocation);
 			for (int fileIndex = 0; fileIndex < files.Length; fileIndex++) 
-				chapterFiles.Add($"Chapter {fileIndex:0000}", files[fileIndex]);
+				chapterFiles.Add($"Chapter {(fileIndex + 1):0000}", files[fileIndex]);
 
 			Log("[CreateEpubFromSeries] Generating Epub...");
 			// Assemble and create the EPUB.
@@ -311,7 +311,7 @@ namespace EpubManager.ContentSources
 			Dictionary<string, string> chapterFiles = [];
 			string[] files = Directory.GetFiles(storyLocation);
 			for (int fileIndex = 0; fileIndex < files.Length; fileIndex++)
-				chapterFiles.Add($"Chapter {fileIndex:0000}", files[fileIndex]);
+				chapterFiles.Add($"Chapter {(fileIndex + 1):0000}", files[fileIndex]);
 
 			Log("[CreateEpubFromStory] Generating Epub...");
 			// Construct the EPUB metadata and generate the final file.

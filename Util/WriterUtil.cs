@@ -432,7 +432,7 @@ namespace EpubManager.Util
 					new XAttribute("id", $"toc-li-{i + 1}"),
 					new XElement(xhtml + "a",
 						new XAttribute("href", href),
-						$"{i}. {chapterInfo.Key}"
+						$"{i+1}. {chapterInfo.Key}"
 					)
 				);
 			}
@@ -606,7 +606,7 @@ namespace EpubManager.Util
 				yield return new XElement(XName.Get("navPoint", ncxNamespace),
 					new XAttribute("id", $"navPoint-{i + 1}"),
 					new XElement(XName.Get("navLabel", ncxNamespace),
-						new XElement(XName.Get("text", ncxNamespace), $"{i}. {chapterInfo.Key}")
+						new XElement(XName.Get("text", ncxNamespace), $"{i+1}. {chapterInfo.Key}")
 					),
 					new XElement(XName.Get("content", ncxNamespace),
 						new XAttribute("src", $"text/ch{i + 1:0000}.xhtml")
