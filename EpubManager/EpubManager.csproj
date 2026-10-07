@@ -14,6 +14,9 @@
 	  <PackageTags>epub;epub-writer</PackageTags>
 	  <NeutralLanguage>en</NeutralLanguage>
 	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
+	  <Authors>IrisDev</Authors>
+	  <Company>IrisDev</Company>
+	  <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

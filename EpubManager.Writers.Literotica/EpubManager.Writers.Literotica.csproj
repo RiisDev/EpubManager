@@ -12,6 +12,9 @@
 	  <PackageReadmeFile>README.md</PackageReadmeFile>
 	  <PackageIcon>icon.png</PackageIcon>
 	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
+	  <Authors>IrisDev</Authors>
+	  <Company>IrisDev</Company>
+	  <Product>EpubManager</Product>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
