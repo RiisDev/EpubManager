@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+	  <LangVersion>preview</LangVersion>
+	  <Nullable>enable</Nullable>
+	  <Description>Literotica writer plugin for EpubManager. Auto-discovered; no setup needed.</Description>
+	  <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+	  <Title>EpubManager.Writers.Literotica</Title>
+	  <PackageProjectUrl>https://github.com/RiisDev/EpubManager</PackageProjectUrl>
+	  <RepositoryUrl>https://github.com/RiisDev/EpubManager</RepositoryUrl>
+	  <PackageReadmeFile>README.md</PackageReadmeFile>
+	  <PackageIcon>icon.png</PackageIcon>
+	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\EpubManager\Util\Range-Record.cs" Link="Range-Record.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LiteroticaApi" Version="3.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EpubManager\EpubManager.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="icon.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>

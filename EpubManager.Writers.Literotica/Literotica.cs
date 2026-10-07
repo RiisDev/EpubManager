@@ -6,41 +6,19 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
+using EpubManager.ContentSources;
 using LiteroticaApi.Api;
 using LiteroticaApi.DataObjects;
 
-namespace EpubManager.ContentSources
+namespace EpubManager.Writers
 {
-
 	/// <summary>
 	/// Adds base util to Literotica story writer.
 	/// </summary>
 	public class LiteroticaUrlUtil : IStoryWriterUtil
 	{
-		internal record Data(
-			[property: JsonPropertyName("id")] int? Id,
-			[property: JsonPropertyName("user_id")] int? UserId,
-			[property: JsonPropertyName("url")] object? Url,
-			[property: JsonPropertyName("created_at")] DateTime? CreatedAt,
-			[property: JsonPropertyName("modified_at")] DateTime? ModifiedAt,
-			[property: JsonPropertyName("title")] string Title,
-			[property: JsonPropertyName("language")] int? Language,
-			[property: JsonPropertyName("state")] string State,
-			[property: JsonPropertyName("description")] object Description,
-			[property: JsonPropertyName("view_count")] int? ViewCount,
-			[property: JsonPropertyName("comments_count")] int? CommentsCount,
-			[property: JsonPropertyName("favorites_count")] int? FavoritesCount,
-			[property: JsonPropertyName("lists_count")] int? ListsCount,
-			[property: JsonPropertyName("user")] Author User,
-			[property: JsonPropertyName("work_count")] int? WorkCount,
-			[property: JsonPropertyName("introduction")] object? Introduction
-		);
-		internal record InternalSeriesRoot(
-			[property: JsonPropertyName("success")] bool? Success,
-			[property: JsonPropertyName("data")] Data Data
-		);
-
 		/// <summary>
 		/// Extracts the story slug from a Literotica story URL.
 		/// </summary>
@@ -56,36 +34,7 @@ namespace EpubManager.ContentSources
 		/// </list>
 		/// The slug is validated using <see cref="VerifySlugAsync(string)"/>.
 		/// </remarks>
-		public async Task<string> GetStorySlugAsync(string url)
-		{
-			string foundSlug = url;
-
-			if (url.Contains("/s/"))
-			{
-				Match slugMatch = Regex.Match(url, "(?<=\\/s\\/)[^\\/]+", RegexOptions.Singleline | RegexOptions.Compiled);
-				if (slugMatch.Success)
-					foundSlug = slugMatch.Value;
-			}
-			else if (url.Contains("/story/"))
-			{
-				Match slugMatch = Regex.Match(url, "(?<=\\/story\\/)[^\\/]+", RegexOptions.Singleline | RegexOptions.Compiled);
-				if (slugMatch.Success)
-					foundSlug = slugMatch.Value;
-			}
-			else if (url.Contains("/stories/"))
-			{
-				Match slugMatch = Regex.Match(url, "(?<=\\/stories\\/)[^\\/]+", RegexOptions.Singleline | RegexOptions.Compiled);
-				if (slugMatch.Success)
-					foundSlug = slugMatch.Value;
-			}
-
-			foundSlug = foundSlug.Trim().Trim('/');
-
-			if (string.IsNullOrEmpty(foundSlug) || !await VerifySlugAsync(foundSlug).ConfigureAwait(false))
-				throw new Exception($"{foundSlug} is an invalid story.");
-
-			return foundSlug;
-		}
+		public Task<string> GetStorySlugAsync(string url) => LiteroticaApi.LiteroticaUrlUtil.GetStorySlugAsync(url);
 
 		/// <summary>
 		/// Extracts the numeric series ID from a Literotica series URL.
@@ -96,36 +45,7 @@ namespace EpubManager.ContentSources
 		/// <remarks>
 		/// The series ID is validated using <see cref="VerifySeriesIdAsync(string)"/>.
 		/// </remarks>
-		public async Task<string> GetSeriesIdAsync(string url)
-		{
-			string foundSlug = url;
-
-			if (url.Contains("/se/"))
-			{
-				Match slugMatch = Regex.Match(url, "(?<=\\/se\\/)[^\\/]+", RegexOptions.Singleline | RegexOptions.Compiled);
-				if (slugMatch.Success)
-					foundSlug = slugMatch.Value;
-			}
-
-			foundSlug = foundSlug.Trim().Trim('/');
-
-			int seriesId = 0;
-			bool seriesExist = !string.IsNullOrEmpty(foundSlug) && await VerifySeriesIdAsync(foundSlug);
-			bool validId = !string.IsNullOrEmpty(foundSlug) && int.TryParse(foundSlug, out seriesId);
-
-			if (seriesExist && !validId)
-			{
-				InternalSeriesRoot internalSeries = await Client.Get<InternalSeriesRoot>($"series/{foundSlug}");
-				seriesId = internalSeries.Data.Id ?? -1;
-			}
-
-			if (seriesId <= 0)
-				throw new Exception($"{foundSlug} is an invalid series.");
-
-			foundSlug = seriesId.ToString();
-
-			return foundSlug;
-		}
+		public Task<string> GetSeriesIdAsync(string url) => LiteroticaApi.LiteroticaUrlUtil.GetSeriesIdAsync(url);
 
 		/// <summary>
 		/// Asynchronously verifies whether the specified series ID exists on Literotica by sending a HEAD request to the API.
@@ -137,11 +57,7 @@ namespace EpubManager.ContentSources
 		/// verification.</param>
 		/// <returns>A task that represents the asynchronous operation. The task result is <see langword="true"/> if the series ID
 		/// exists; otherwise, <see langword="false"/>.</returns>
-		public async Task<bool> VerifySeriesIdAsync(string? seriesId)
-		{
-			HttpResponseMessage? responseMessage = await Client.HttpClientInstance.SendAsync(new HttpRequestMessage(HttpMethod.Head, $"https://literotica.com/api/3/series/{seriesId}"));
-			return responseMessage.IsSuccessStatusCode;
-		}
+		public Task<bool> VerifySeriesIdAsync(string? seriesId) => LiteroticaApi.LiteroticaUrlUtil.VerifySeriesIdAsync(seriesId);
 
 		/// <summary>
 		/// Checks whether a story slug exists on Literotica by sending a HEAD request to the API.
@@ -151,11 +67,7 @@ namespace EpubManager.ContentSources
 		/// <param name="slug">The slug identifier of the story to verify. Can be null or empty; if so, the method will return false.</param>
 		/// <returns>A task that represents the asynchronous operation. The task result is <see langword="true"/> if the slug exists;
 		/// otherwise, <see langword="false"/>.</returns>
-		public async Task<bool> VerifySlugAsync(string? slug)
-		{
-			HttpResponseMessage? responseMessage = await Client.HttpClientInstance.SendAsync(new HttpRequestMessage(HttpMethod.Head, $"https://literotica.com/api/3/stories/{slug}"));
-			return responseMessage.IsSuccessStatusCode;
-		}
+		public Task<bool> VerifySlugAsync(string? slug) => LiteroticaApi.LiteroticaUrlUtil.VerifySlugAsync(slug);
 	}
 
 	/// <summary>
@@ -175,6 +87,9 @@ namespace EpubManager.ContentSources
 		/// LiteroticaUrlUtil instance. The instance is thread-safe for concurrent use if LiteroticaUrlUtil itself is
 		/// thread-safe.</remarks>
 		public static readonly LiteroticaUrlUtil UrlUtil = new ();
+
+		// Courtesy pause between part downloads when fetching a series.
+		private static readonly TimeSpan PartDelay = TimeSpan.FromMilliseconds(250);
 
 		/// <summary>
 		/// Writes the specified message to both the standard output and the debug output streams.
@@ -196,18 +111,18 @@ namespace EpubManager.ContentSources
 		/// <param name="startIndex">What chapter of the series to start at</param>
 		/// <param name="endIndex">What chapter of the series to end at</param>
 		/// <exception cref="Exception">Thrown if the series cannot be found or has no valid stories.</exception>
-		public async Task CreateEpubFromSeriesAsync(string seriesUrl, string outputDirectory, string coverOverwrite = "", bool raw = false, int startIndex = 0, int endIndex = 0)
+		public async Task CreateEpubFromSeriesAsync(string seriesUrl, string outputDirectory, string coverOverwrite = "", bool raw = false, int startIndex = 0, int endIndex = 0, EpubOptions? options = null, CancellationToken cancellationToken = default)
 		{
 			Log("[CreateEpubFromSeries] Verifying series url...");
-			string seriesSlug = await UrlUtil.GetSeriesIdAsync(seriesUrl);
+			string seriesSlug = await UrlUtil.GetSeriesIdAsync(seriesUrl).ConfigureAwait(false);
 
 			Log("[CreateEpubFromSeries] Fetching series info from api...");
-			Series? seriesData = await SeriesApi.GetSeriesInfoAsync(seriesSlug);
+			Series? seriesData = await SeriesApi.GetSeriesInfoAsync(seriesSlug).ConfigureAwait(false);
 
 			if (seriesData is null || seriesData.Parts.Count == 0 || !seriesData.UserId.HasValue)
 				throw new Exception("No stories found in the specified series.");
 
-			Author? author = await AuthorsApi.GetAuthorByIdAsync(seriesData.UserId.Value);
+			Author? author = await AuthorsApi.GetAuthorByIdAsync(seriesData.UserId.Value).ConfigureAwait(false);
 
 			if (author is null || string.IsNullOrEmpty(author.Username))
 				throw new Exception("Failed to fetch author.");
@@ -221,7 +136,7 @@ namespace EpubManager.ContentSources
 			{
 				if (string.IsNullOrEmpty(coverOverwrite))
 				{
-					Cover cover = await SeriesApi.GetSeriesCoverAsync(seriesSlug);
+					Cover cover = await SeriesApi.GetSeriesCoverAsync(seriesSlug).ConfigureAwait(false);
 					coverPath = cover.Data.Mobile.X1.FilePath;
 				}
 				else coverPath = coverOverwrite;
@@ -233,48 +148,52 @@ namespace EpubManager.ContentSources
 
 			Log($"[CreateEpubFromSeries] {(string.IsNullOrEmpty(coverPath) ? "Found no cover art." : "Cover art found.")}");
 
-			// Fetch content for each story in the series.
-			Dictionary<string, string> chapters = [];
+			// Fetch content for each story in the series (endIndex is inclusive; 0 means "through the last").
+			int firstIndex = Math.Max(startIndex, 0);
+			int lastIndex = endIndex > 0 ? Math.Min(endIndex, seriesData.Parts.Count - 1) : seriesData.Parts.Count - 1;
 
-			for (int storyIndex = startIndex; storyIndex < seriesData.Parts.Count; storyIndex++)
+			string workDirectory = StoryWriter.NewTempDirectory();
+			try
 			{
-				if (storyIndex > endIndex) break;
+				// Insertion order is the reading order; the file name prefix keeps titles unique.
+				Dictionary<string, string> chapterFiles = [];
 
-				Part story = seriesData.Parts[storyIndex];
-				Log($"[CreateEpubFromSeries] Fetching content: {story.Title}");
-				string[] pages = await StoryApi.GetStoryContentAsync(story.Url);
-				chapters.Add(story.Title, string.Join(Environment.NewLine + Environment.NewLine, pages));
+				for (int storyIndex = firstIndex; storyIndex <= lastIndex; storyIndex++)
+				{
+					cancellationToken.ThrowIfCancellationRequested();
+					if (storyIndex > firstIndex) await Task.Delay(PartDelay, cancellationToken).ConfigureAwait(false);
+
+					Part story = seriesData.Parts[storyIndex];
+					Log($"[CreateEpubFromSeries] Fetching content: {story.Title}");
+					string[] pages = await EpubManagerClient.WithRetryAsync(() => StoryApi.GetStoryContentAsync(story.Url), onRetry: Log, cancellationToken: cancellationToken).ConfigureAwait(false);
+
+					string chapterFilePath = Path.Combine(workDirectory, $"{storyIndex + 1:0000}-{StoryWriterUtil.ToSafeFileName(story.Title)}.txt");
+					File.WriteAllText(chapterFilePath, string.Join(Environment.NewLine + Environment.NewLine, pages));
+					chapterFiles[chapterFiles.ContainsKey(story.Title) ? $"{story.Title} ({storyIndex + 1})" : story.Title] = chapterFilePath;
+				}
+
+				Log("[CreateEpubFromSeries] Generating Epub...");
+				// Assemble and create the EPUB.
+				EpubStory epubStory = new(
+					Title: seriesData.Title,
+					Language: "English",
+					CoverPath: string.IsNullOrEmpty(coverOverwrite) ? string.IsNullOrEmpty(coverPath) ? null : coverPath : coverOverwrite,
+					Author: author.Username,
+					Series: new EpubSeries(seriesData.Title, 1),
+					Tags: [],
+					Chapters: chapterFiles
+				)
+				{
+					// Same series and part range always yields the same book identity.
+					Identifier = StoryWriter.StableId($"literotica:series:{seriesSlug}:{firstIndex}-{lastIndex}")
+				};
+
+				await StoryWriter.CreateEpubAsync(options?.Apply(epubStory) ?? epubStory, Log, outputDirectory, raw, cancellationToken).ConfigureAwait(false);
 			}
-
-			// Prepare temporary directory for writing chapter files.
-			string storyLocation = Path.Combine(StoryWriter.TempDir, StoryWriterUtil.ToSafeFileName(seriesData.Title), "Chapters");
-			Directory.CreateDirectory(storyLocation);
-
-			Log("[CreateEpubFromSeries] Writing chapters to file...");
-			foreach (KeyValuePair<string, string> chapter in chapters)
+			finally
 			{
-				string chapterFilePath = Path.Combine(storyLocation, $"{StoryWriterUtil.ToSafeFileName(chapter.Key)}.txt");
-				File.WriteAllText(chapterFilePath, chapter.Value);
+				try { Directory.Delete(workDirectory, true); } catch { /* best effort */ }
 			}
-
-			Dictionary<string, string> chapterFiles = [];
-			string[] files = Directory.GetFiles(storyLocation);
-			for (int fileIndex = 0; fileIndex < files.Length; fileIndex++) 
-				chapterFiles.Add($"Chapter {(fileIndex + 1):0000}", files[fileIndex]);
-
-			Log("[CreateEpubFromSeries] Generating Epub...");
-			// Assemble and create the EPUB.
-			EpubStory epubStory = new(
-				Title: seriesData.Title,
-				Language: "English",
-				CoverPath: string.IsNullOrEmpty(coverOverwrite) ? string.IsNullOrEmpty(coverPath) ? null : coverPath : coverOverwrite,
-				Author: author.Username,
-				Series: new EpubSeries(seriesData.Title, 1),
-				Tags: [],
-				Chapters: chapterFiles
-			);
-
-			StoryWriter.CreateEpub(epubStory, Log, outputDirectory, raw);
 		}
 
 		/// <summary>
@@ -285,47 +204,51 @@ namespace EpubManager.ContentSources
 		/// <param name="coverOverwrite">Forcefully set cover art for Epub</param>
 		/// <param name="raw">If you don't want it to output .epub but instead the raw formatting.</param>
 		/// <exception cref="Exception">Thrown if the story or author information cannot be retrieved.</exception>
-		public async Task CreateEpubFromStoryAsync(string storyUrl, string outputDirectory, string coverOverwrite = "", bool raw = false)
+		public async Task CreateEpubFromStoryAsync(string storyUrl, string outputDirectory, string coverOverwrite = "", bool raw = false, EpubOptions? options = null, CancellationToken cancellationToken = default)
 		{
 			Log("[CreateEpubFromStory] Verifying story url...");
 			string storySlug = await UrlUtil.GetStorySlugAsync(storyUrl).ConfigureAwait(false);
 
 			Log("[CreateEpubFromStory] Fetching story info from api...");
-			StoryInfo? storyData = await StoryApi.GetStoryInfoAsync(storySlug);
+			StoryInfo? storyData = await StoryApi.GetStoryInfoAsync(storySlug).ConfigureAwait(false);
 
 			if (storyData is null || string.IsNullOrEmpty(storyData.Submission.Authorname))
 				throw new Exception("The specified story could not be found or contains no valid content.");
 
 			Log("[CreateEpubFromStory] Fetching story content...");
 
-			string[] storyText = await StoryApi.GetStoryContentAsync(storyData.Submission.Url);
-			
-			// Prepare directory for temporary text file storage.
-			string storyLocation = Path.Combine(StoryWriter.TempDir, StoryWriterUtil.ToSafeFileName(storyData.Submission.Title), "Chapters");
-			Directory.CreateDirectory(storyLocation);
+			string[] storyText = await EpubManagerClient.WithRetryAsync(() => StoryApi.GetStoryContentAsync(storyData.Submission.Url), onRetry: Log, cancellationToken: cancellationToken).ConfigureAwait(false);
 
-			Log("[CreateEpubFromStory] Writing story to file...");
-			string chapterFilePath = Path.Combine(storyLocation, $"{StoryWriterUtil.ToSafeFileName(storyData.Submission.Title)}.txt");
-			File.WriteAllText(chapterFilePath, string.Join("\n\n", storyText));
+			string workDirectory = StoryWriter.NewTempDirectory();
+			try
+			{
+				Log("[CreateEpubFromStory] Writing story to file...");
+				string chapterFilePath = Path.Combine(workDirectory, $"{StoryWriterUtil.ToSafeFileName(storyData.Submission.Title)}.txt");
+				File.WriteAllText(chapterFilePath, string.Join("\n\n", storyText));
 
-			Dictionary<string, string> chapterFiles = [];
-			string[] files = Directory.GetFiles(storyLocation);
-			for (int fileIndex = 0; fileIndex < files.Length; fileIndex++)
-				chapterFiles.Add($"Chapter {(fileIndex + 1):0000}", files[fileIndex]);
+				Dictionary<string, string> chapterFiles = new() { [storyData.Submission.Title] = chapterFilePath };
 
-			Log("[CreateEpubFromStory] Generating Epub...");
-			// Construct the EPUB metadata and generate the final file.
-			EpubStory epubStory = new(
-				Title: storyData.Submission.Title,
-				Language: "English",
-				CoverPath: string.IsNullOrEmpty(coverOverwrite) ? null : coverOverwrite,
-				Author: storyData.Submission.Author.Username,
-				Series: new EpubSeries(storyData.Submission.Title, 1),
-				Tags: storyData.Submission.Tags.Select(tag => tag.TagText.ToString()).ToArray(),
-				Chapters: chapterFiles
-			);
+				Log("[CreateEpubFromStory] Generating Epub...");
+				// Construct the EPUB metadata and generate the final file.
+				EpubStory epubStory = new(
+					Title: storyData.Submission.Title,
+					Language: "English",
+					CoverPath: string.IsNullOrEmpty(coverOverwrite) ? null : coverOverwrite,
+					Author: storyData.Submission.Author.Username,
+					Series: null,
+					Tags: storyData.Submission.Tags.Select(tag => tag.TagText.ToString()).ToArray(),
+					Chapters: chapterFiles
+				)
+				{
+					Identifier = StoryWriter.StableId($"literotica:story:{storySlug}")
+				};
 
-			StoryWriter.CreateEpub(epubStory, Log, outputDirectory, raw);
+				await StoryWriter.CreateEpubAsync(options?.Apply(epubStory) ?? epubStory, Log, outputDirectory, raw, cancellationToken).ConfigureAwait(false);
+			}
+			finally
+			{
+				try { Directory.Delete(workDirectory, true); } catch { /* best effort */ }
+			}
 		}
 	}
 }

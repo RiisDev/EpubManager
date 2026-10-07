@@ -1,3 +1,5 @@
 <Solution>
-  <Project Path="EpubManager.csproj" />
+  <Project Path="EpubManager.Writers.Literotica/EpubManager.Writers.Literotica.csproj" Id="e437f33d-deb1-4fec-ba2b-593d7296323d" />
+  <Project Path="EpubManager/EpubManager.csproj" />
+  <Project Path="EpubManager.Tests/EpubManager.Tests.csproj" />
 </Solution>

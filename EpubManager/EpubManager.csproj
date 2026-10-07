@@ -1,0 +1,52 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+	  <LangVersion>preview</LangVersion>
+	  <Nullable>enable</Nullable>
+	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
+	  <Description>Build EPUBs from online stories. Install an EpubManager.Writers.* package for each site you want.</Description>
+	  <Title>EpubManager</Title>
+	  <Copyright>RiisDev</Copyright>
+	  <PackageProjectUrl>https://github.com/RiisDev/EpubManager</PackageProjectUrl>
+	  <PackageReadmeFile>README.md</PackageReadmeFile>
+	  <RepositoryUrl>https://github.com/RiisDev/EpubManager</RepositoryUrl>
+	  <PackageTags>epub;epub-writer</PackageTags>
+	  <NeutralLanguage>en</NeutralLanguage>
+	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebugType>embedded</DebugType>
+    <WarningLevel>9999</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>embedded</DebugType>
+    <WarningLevel>9999</WarningLevel>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="EpubManager.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Template\mimetype" LogicalName="EpubManager.Template.mimetype" />
+    <EmbeddedResource Include="Template\META-INF\container.xml" LogicalName="EpubManager.Template.META-INF.container.xml" />
+    <EmbeddedResource Include="Template\META-INF\com.apple.ibooks.display-options.xml" LogicalName="EpubManager.Template.META-INF.com.apple.ibooks.display-options.xml" />
+    <EmbeddedResource Include="Template\styles\style.css" LogicalName="EpubManager.Template.styles.style.css" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Net.Http.Json" Version="10.0.2" />
+    <PackageReference Include="System.Text.Json" Version="10.0.2" />
+  </ItemGroup>
+
+</Project>

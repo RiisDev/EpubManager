@@ -22,12 +22,12 @@ namespace EpubManager.Util
 			Directory.CreateDirectory(Path.Combine(epubDir, "text"));
 
 			Assembly assembly = Assembly.GetExecutingAssembly();
-			string root = $"{assembly.GetName().Name}.EpubWriter.Standards.";
+			string root = $"{assembly.GetName().Name}.Template.";
 
 			WriteEmbeddedFile(assembly, $"{root}mimetype", Path.Combine(outputDirectory, "mimetype"));
-			WriteEmbeddedFile(assembly, $"{root}META_INF.container.xml", Path.Combine(metaInfDir, "container.xml"));
-			WriteEmbeddedFile(assembly, $"{root}META_INF.com.apple.ibooks.display-options.xml", Path.Combine(metaInfDir, "com.apple.ibooks.display-options.xml"));
-			WriteEmbeddedFile(assembly, $"{root}styles.stylesheet1.css", Path.Combine(stylesDir, "stylesheet1.css"));
+			WriteEmbeddedFile(assembly, $"{root}META-INF.container.xml", Path.Combine(metaInfDir, "container.xml"));
+			WriteEmbeddedFile(assembly, $"{root}META-INF.com.apple.ibooks.display-options.xml", Path.Combine(metaInfDir, "com.apple.ibooks.display-options.xml"));
+			WriteEmbeddedFile(assembly, $"{root}styles.style.css", Path.Combine(stylesDir, "style.css"));
 		}
 
 		private static void WriteEmbeddedFile(Assembly assembly, string resourceName, string outputPath)
